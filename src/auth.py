@@ -1,5 +1,7 @@
 import os
 import hashlib
+from time import sleep
+import getpass
 
 class Auth:
     def __init__(self, file_path='users.csv'):
@@ -17,7 +19,7 @@ class Auth:
         hashed_password = self.hash_password(password)
         with open(self.file_path, 'a') as file:
             file.write(f"{username},{hashed_password}\n")
-        return True, "Registration successful."
+        return True, "🎉 Registration successful!"
 
     def login(self, username, password):
         hashed_password = self.hash_password(password)
@@ -25,7 +27,9 @@ class Auth:
             for line in file:
                 stored_username, stored_password = line.strip().split(',')
                 if stored_username == username and stored_password == hashed_password:
-                    return True, "Login successful."
+                    print("🔄 Loading your account and password...")
+                    sleep(2)
+                    return True, "🔓 Login successful!"
         return False, "Invalid username or password."
 
     def user_exists(self, username):

@@ -3,6 +3,8 @@ import time
 import csv
 import os
 from auth import Auth
+import getpass
+
 
 class Sudoku:
     def __init__(self):
@@ -105,7 +107,7 @@ class Sudoku:
         return False
 
     def remove_elements(self, board):
-        count = random.randint(20, 30)  # Adjusted to make a solvable puzzle
+        count = random.randint(1, 3)  # Adjusted to make a solvable puzzle
         while count > 0:
             row, col = random.randint(0, 8), random.randint(0, 8)
             while board[row][col] == 0:
@@ -122,12 +124,18 @@ class Sudoku:
     def get_user_solution(self):
         # Copy the board
         user_board = [row[:] for row in self.board]
-        print("Enter ur solution by specifying the 'row col number' (e.g '1 1 5'), AND start from 1")
+        print("📝 Enter your solution by specifying the 'row col number' (e.g '1 1 5'), AND start from 1")
+        print("✅ Enter 'done' to finish")
+        print("💡 Enter 'hint row col' for a hint")
+        print("🚪 Enter 'quit' to leave this game")        
         any_input = False
         while True:
             try:
-                user_input = input("Enter row, column, number (or 'done' to finish or 'hint row col' for a hint): ").strip()
-                if user_input.lower().startswith == 'done':
+                user_input = input("Enter row, column, answer : ").strip()
+                if user_input.lower() == 'quit':
+                    print("🚪 Exiting the game. Goodbye!")
+                    exit()
+                if user_input.lower() == 'done':
                     break
                 if user_input.lower().startswith('hint'):
                     _, row, col = user_input.split()
@@ -136,9 +144,9 @@ class Sudoku:
                         raise ValueError("Row and col number must be between 1 and 9.")
                     hint = self.get_hint(row, col)
                     if hint is not None:
-                        print(f"Hint: \nAt row {row+1}, column {col+1}, the correct number is {hint}")
+                        print(f"💡 Hint: At row {row+1}, column {col+1}, the correct number is {hint}")
                     else:
-                        print("Smart shawnD cannot provide a hint for a pre-filled position,if u even need this one ,dont do this shit.")
+                        print("⚠️ Smart ShawnD cannot provide a hint for a pre-filled position, if you even need this one, don't do this.")
                     continue
                 row, col, num = map(int, user_input.split())
                 if not (1 <= row <= 9 and 1 <= col <= 9 and 1 <= num <= 9):
@@ -150,7 +158,7 @@ class Sudoku:
                 user_board[row-1][col-1] = num
                 any_input = True
             except ValueError as e:
-                print(f"Invalid input: {e}, please try again")
+                print(f"❌ Invalid input: {e}, please try again")
         if any_input:
             return user_board
         else:
@@ -168,19 +176,28 @@ class Sudoku:
 def main():
     auth = Auth()
     
-    print("Welcome to Sudoku Game!")
+    print("🎮 Welcome to Sudoku Game!")
     while True:
-        choice = input("Do you have an account? (yes/no): ").strip().lower()
+        choice = input("❓ Do you have an account? (yes/no): ").strip().lower()
         if choice == 'no':
-            username = input("Enter a new username: ").strip()
-            password = input("Enter a new password: ").strip()
+            username = input("🆕 Enter a new username: ").strip()
+            if auth.user_exists(username):
+                print("❌ Username already exists.")
+                continue
+            while True:
+                password = getpass.getpass("🔐 Enter a new password ( Use SHA-256 to protect your data) : ").strip()
+                confirm_password = getpass.getpass("🔐 Confirm your password: ").strip()
+                if password == confirm_password:
+                    break
+                else:
+                    print("❌ Passwords do not match. Please try again.")
             success, message = auth.register(username, password)
             print(message)
             if success:
                 break
         elif choice == 'yes':
-            username = input("Enter your username: ").strip()
-            password = input("Enter your password: ").strip()
+            username = input("🖊️ Enter your username: ").strip()
+            password = getpass.getpass("🔑 Enter your password: ").strip()
             success, message = auth.login(username, password)
             print(message)
             if success:
@@ -189,7 +206,7 @@ def main():
             print("Invalid choice, please enter 'yes' or 'no'.")
 
     sudoku = Sudoku()
-    print("Generated Sudoku Board:")
+    print("📋 Generated Sudoku Board:")
     sudoku.print_board()
 
     # Record start time
@@ -205,8 +222,8 @@ def main():
 
     # Check user solution
     if sudoku.check_solution(user_solution):
-        print("\nYour solution is correct!")
-        print(f"Time taken to solve the Sudoku: {total_time:.2f} seconds")
+        print("\n🎉 Your solution is correct!")
+        print(f"⏱️ Time taken to solve the Sudoku: {total_time:.2f} seconds")
 
         csv_file = "sudoku_times.csv"
         file_exists = os.path.isfile(csv_file)
@@ -227,13 +244,13 @@ def main():
 
         if times:
             best_time = min(times, key=lambda x: x[1])
-            print(f"\nYour time: {total_time:.2f} seconds")
-            print(f"Best time: {best_time[1]:.2f} seconds by {best_time[0]}")
+            print(f"\n⏱️ Your time: {total_time:.2f} seconds")
+            print(f"🏆 Best time: {best_time[1]:.2f} seconds by {best_time[0]}")
         else:
             print("\nNo previous times to compare.")
     else:
-        print("\nYour solution is incorrect.")
-        print(f"\nYour time: {total_time:.2f} seconds")
+        print("\n❌ Your solution is incorrect.")
+        print(f"\n⏱️ Your time: {total_time:.2f} seconds")
 
 if __name__ == "__main__":
     main()
