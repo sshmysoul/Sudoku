@@ -114,6 +114,7 @@ class Sudoku:
         # Copy the board
         user_board = [row[:] for row in self.board]
         print("Enter your solution by specifying the 'row col number' (e.g '1 1 5'), start from 1")
+        any_input = False
         while True:
             try:
                 user_input = input("Enter row, column, number (or 'done' to finish): ").strip()
@@ -127,10 +128,11 @@ class Sudoku:
                 if not self.is_valid(user_board, row-1, col-1, num):
                     raise ValueError("The number is not valid for this position.")
                 user_board[row-1][col-1] = num
+                any_input = True
             except ValueError as e:
                 print(f"Invalid input: {e}, please try again")
 
-        return user_board
+        return user_board,any_input
 
     def check_solution(self, user_board):
         for i in range(9):
@@ -138,7 +140,7 @@ class Sudoku:
                 if self.board[i][j] == 0:
                     if not self.is_valid(user_board, i, j, user_board[i][j]):
                         return False
-        return True
+        return self.solve(user_board)
 
 def main():
     auth = Auth()
