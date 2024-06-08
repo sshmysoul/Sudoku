@@ -2,7 +2,7 @@ import random
 import time
 import csv
 import os
-
+from auth import Auth
 class Sudoku:
     def __init__(self):
         self.board = self.generate_sudoku()
@@ -122,6 +122,10 @@ class Sudoku:
                 row, col, num = map(int, user_input.split())
                 if not (1 <= row <= 9 and 1 <= col <= 9 and 1 <= num <= 9):
                     raise ValueError("Row, column, and number must be between 1 and 9.")
+                if self.board[row-1][col-1] != 0:
+                    raise ValueError("You cannot change the given numbers.")
+                if not self.is_valid(user_board, row-1, col-1, num):
+                    raise ValueError("The number is not valid for this position.")
                 user_board[row-1][col-1] = num
             except ValueError as e:
                 print(f"Invalid input: {e}, please try again")
@@ -136,57 +140,75 @@ class Sudoku:
                         return False
         return True
 
-# Create Sudoku instance and print the generated board
-sudoku = Sudoku()
-print("Generated Sudoku Board:")
-sudoku.print_board()
+def main():
+    auth = Auth()
+    
+    print("Welcome to Sudoku Game!")
+    while True:
+        choice = input("Do you have an account? (yes/no): ").strip().lower()
+        if choice == 'no':
+            username = input("Enter a new username: ").strip()
+            password = input("Enter a new password: ").strip()
+            success, message = auth.register(username, password)
+            print(message)
+            if success:
+                break
+        elif choice == 'yes':
+            username = input("Enter your username: ").strip()
+            password = input("Enter your password: ").strip()
+            success, message = auth.login(username, password)
+            print(message)
+            if success:
+                break
+        else:
+            print("Invalid choice, please enter 'yes' or 'no'.")
 
-# Record start time
-start_time = time.time()
+    sudoku = Sudoku()
+    print("Generated Sudoku Board:")
+    sudoku.print_board()
 
-# Get user solution
-print("\nEnter your solution for the Sudoku:")
-user_solution = sudoku.get_user_solution()
+    # Record start time
+    start_time = time.time()
 
-# Record end time
-end_time = time.time()
-total_time = end_time - start_time
+    # Get user solution
+    print("\nEnter your solution for the Sudoku:")
+    user_solution = sudoku.get_user_solution()
 
-# Check user solution
-if sudoku.check_solution(user_solution):
-    print("\nYour solution is correct!")
-    print(f"Time taken to solve the Sudoku: {total_time:.2f} seconds")
+    # Record end time
+    end_time = time.time()
+    total_time = end_time - start_time
 
-    csv_file = "sudoku_times.csv"
-    file_exists = os.path.isfile(csv_file)
+    # Check user solution
+    if sudoku.check_solution(user_solution):
+        print("\nYour solution is correct!")
+        print(f"Time taken to solve the Sudoku: {total_time:.2f} seconds")
 
-    with open(csv_file, mode='a', newline='') as file:
-        writer = csv.writer(file)
-        if not file_exists:
-            writer.writerow(["Time taken (seconds)"])
-        writer.writerow([total_time])
+        csv_file = "sudoku_times.csv"
+        file_exists = os.path.isfile(csv_file)
 
-    # Compare highest point
-    times = []
-    with open(csv_file, mode='r') as file:
-        reader = csv.reader(file)
-        next(reader)
-        for row in reader:
-            times.append(float(row[0]))
+        with open(csv_file, mode='a', newline='') as file:
+            writer = csv.writer(file)
+            if not file_exists:
+                writer.writerow(["Username", "Time taken (seconds)"])
+            writer.writerow([username, total_time])
 
-    if times:
-        best_time = min(times)
-        print(f"\nYour time: {total_time:.2f} seconds")
-        print(f"Best time: {best_time:.2f} seconds")
+        # Compare highest point
+        times = []
+        with open(csv_file, mode='r') as file:
+            reader = csv.reader(file)
+            next(reader)
+            for row in reader:
+                times.append((row[0], float(row[1])))
+
+        if times:
+            best_time = min(times, key=lambda x: x[1])
+            print(f"\nYour time: {total_time:.2f} seconds")
+            print(f"Best time: {best_time[1]:.2f} seconds by {best_time[0]}")
+        else:
+            print("\nNo previous times to compare.")
     else:
-        print("\nNo previous times to compare.")
-else:
-    print("\nYour solution is incorrect.")
-    print(f"\nYour time: {total_time:.2f} seconds")
+        print("\nYour solution is incorrect.")
+        print(f"\nYour time: {total_time:.2f} seconds")
 
-"""
-# This is optional, whether to print all recorded times
-print("\nAll recorded times are:")
-for idx, time_taken in enumerate(times, start=1):
-    print(f"{idx}. {time_taken:.2f} seconds")
-"""
+if __name__ == "__main__":
+    main()
