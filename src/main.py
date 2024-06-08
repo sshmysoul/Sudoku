@@ -3,9 +3,12 @@ import time
 import csv
 import os
 from auth import Auth
+
 class Sudoku:
     def __init__(self):
         self.board = self.generate_sudoku()
+        self.solution = [row[:] for row in self.board]
+        self.solve(self.solution)
 
     def print_board(self):
         # Print column indices
@@ -102,7 +105,7 @@ class Sudoku:
         return False
 
     def remove_elements(self, board):
-        count = random.randint(1,1)  # Adjusted to make a solvable puzzle
+        count = random.randint(20, 30)  # Adjusted to make a solvable puzzle
         while count > 0:
             row, col = random.randint(0, 8), random.randint(0, 8)
             while board[row][col] == 0:
@@ -110,19 +113,36 @@ class Sudoku:
             board[row][col] = 0
             count -= 1
 
+    def get_hint(self, row, col):
+        if self.board[row][col] == 0:
+            return self.solution[row][col]
+        else:
+            return None
+
     def get_user_solution(self):
         # Copy the board
         user_board = [row[:] for row in self.board]
-        print("Enter your solution by specifying the 'row col number' (e.g '1 1 5'), start from 1")
+        print("Enter ur solution by specifying the 'row col number' (e.g '1 1 5'), AND start from 1")
         any_input = False
         while True:
             try:
-                user_input = input("Enter row, column, number (or 'done' to finish): ").strip()
-                if user_input.lower() == 'done':
+                user_input = input("Enter row, column, number (or 'done' to finish or 'hint row col' for a hint): ").strip()
+                if user_input.lower().startswith == 'done':
                     break
+                if user_input.lower().startswith('hint'):
+                    _, row, col = user_input.split()
+                    row, col = int(row) - 1, int(col) - 1
+                    if not (0 <= row < 9 and 0 <= col < 9):
+                        raise ValueError("Row and col number must be between 1 and 9.")
+                    hint = self.get_hint(row, col)
+                    if hint is not None:
+                        print(f"Hint: \nAt row {row+1}, column {col+1}, the correct number is {hint}")
+                    else:
+                        print("Smart shawnD cannot provide a hint for a pre-filled position,if u even need this one ,dont do this shit.")
+                    continue
                 row, col, num = map(int, user_input.split())
                 if not (1 <= row <= 9 and 1 <= col <= 9 and 1 <= num <= 9):
-                    raise ValueError("Row, column, and number must be between 1 and 9.")
+                    raise ValueError("Row, col, and number must be between 1 and 9.")
                 if self.board[row-1][col-1] != 0:
                     raise ValueError("You cannot change the given numbers.")
                 if not self.is_valid(user_board, row-1, col-1, num):
@@ -134,9 +154,8 @@ class Sudoku:
         if any_input:
             return user_board
         else:
-            print("Please dont input done directly, if u wanna, input done to exit or type to continue")
+            print("Please don't input 'done' directly. If you want to exit, input 'done' again or type to continue.")
             return self.get_user_solution()
-
 
     def check_solution(self, user_board):
         for i in range(9):
