@@ -2,29 +2,46 @@ import random
 import time
 import csv
 import os
+
 class Sudoku:
     def __init__(self):
         self.board = self.generate_sudoku()
 
     def print_board(self):
+        # Print column indices
+        print("    1 2 3   4 5 6   7 8 9")
+        print("  +-------+-------+-------+")
         for i, row in enumerate(self.board):
-            if i % 3 ==0 and i != 0:
-                print("-" * 21)
-            for j,num in enumerate(row):
-                if j % 3 ==0 and j != 0:
-                    print("|",end = " ")
-                print(str(num) if num != 0 else '.' ,end = ' ') 
-            print()
+            # Print row indices and separator lines
+            if i % 3 == 0 and i != 0:
+                print("  +-------+-------+-------+")
+            print(f"{i+1} |", end=" ")
+            for j, num in enumerate(row):
+                # Print vertical separators
+                if j % 3 == 0 and j != 0:
+                    print("|", end=" ")
+                # Print numbers or spaces
+                print(str(num) if num != 0 else '.', end=" ")
+            print("|")
+        print("  +-------+-------+-------+")
 
     def is_valid(self, board, row, col, num):
+        # Check row and column, excluding the current position
         for i in range(9):
-            if board[row][i] == num or board[i][col] == num:
+            if board[row][i] == num and i != col:
                 return False
+            if board[i][col] == num and i != row:
+                return False
+
+        # Calculate the starting position of the 3x3 grid
         start_row, start_col = 3 * (row // 3), 3 * (col // 3)
+
+        # Check the 3x3 grid, excluding the current position
         for i in range(3):
             for j in range(3):
-                if board[start_row + i][start_col + j] == num:
+                if (start_row + i != row or start_col + j != col) and board[start_row + i][start_col + j] == num:
                     return False
+
         return True
 
     def solve(self, board):
@@ -85,7 +102,7 @@ class Sudoku:
         return False
 
     def remove_elements(self, board):
-        count = random.randint(1,2)
+        count = random.randint(1,1)  # Adjusted to make a solvable puzzle
         while count > 0:
             row, col = random.randint(0, 8), random.randint(0, 8)
             while board[row][col] == 0:
@@ -94,79 +111,82 @@ class Sudoku:
             count -= 1
 
     def get_user_solution(self):
-        #copy board
+        # Copy the board
         user_board = [row[:] for row in self.board]
-        print("Enter ur solution by specifying the 'row col  number' (e.g '1 1 5'),start from 1")
+        print("Enter your solution by specifying the 'row col number' (e.g '1 1 5'), start from 1")
         while True:
             try:
                 user_input = input("Enter row, column, number (or 'done' to finish): ").strip()
                 if user_input.lower() == 'done':
                     break
-                row,col,num = map(int,user_input.split())
-                if not(1 <= row <= 9 and 1 <=col <= 9 and 1 <= num <= 9):
+                row, col, num = map(int, user_input.split())
+                if not (1 <= row <= 9 and 1 <= col <= 9 and 1 <= num <= 9):
                     raise ValueError("Row, column, and number must be between 1 and 9.")
                 user_board[row-1][col-1] = num
             except ValueError as e:
-                print(f"Invalid input : {e} , please try again")
+                print(f"Invalid input: {e}, please try again")
 
         return user_board
 
     def check_solution(self, user_board):
         for i in range(9):
             for j in range(9):
-                if self.board[i][j] == 0 and user_board[i][j] != 0:
-                    if not self.is_valid(user_board,i,j,user_board[i][j]):
+                if self.board[i][j] == 0:
+                    if not self.is_valid(user_board, i, j, user_board[i][j]):
                         return False
-        return self.solve(user_board)
+        return True
 
 # Create Sudoku instance and print the generated board
 sudoku = Sudoku()
 print("Generated Sudoku Board:")
 sudoku.print_board()
 
-#record start  time func
-start_time =time.time()
+# Record start time
+start_time = time.time()
 
 # Get user solution
 print("\nEnter your solution for the Sudoku:")
 user_solution = sudoku.get_user_solution()
 
-#record end time
+# Record end time
 end_time = time.time()
+total_time = end_time - start_time
 
 # Check user solution
 if sudoku.check_solution(user_solution):
     print("\nYour solution is correct!")
+    print(f"Time taken to solve the Sudoku: {total_time:.2f} seconds")
+
+    csv_file = "sudoku_times.csv"
+    file_exists = os.path.isfile(csv_file)
+
+    with open(csv_file, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        if not file_exists:
+            writer.writerow(["Time taken (seconds)"])
+        writer.writerow([total_time])
+
+    # Compare highest point
+    times = []
+    with open(csv_file, mode='r') as file:
+        reader = csv.reader(file)
+        next(reader)
+        for row in reader:
+            times.append(float(row[0]))
+
+    if times:
+        best_time = min(times)
+        print(f"\nYour time: {total_time:.2f} seconds")
+        print(f"Best time: {best_time:.2f} seconds")
+    else:
+        print("\nNo previous times to compare.")
 else:
     print("\nYour solution is incorrect.")
-
-total_time = end_time - start_time
-print(f"\nTime taken to solve the Sudoku: {total_time:.2f} seconds")
-
-csv_file = "sudoku_times.csv"
-file_exists = os.path.isfile(csv_file)
-
-with open(csv_file,mode='a',newline='') as file:
-    writer = csv.writer(file)
-    if not file_exists:
-        writer.writerow(["Time taken (seconds)"])
-    writer.writerow([total_time])
-
-#compare highest point
-times = []
-with open(csv_file,mode='r') as file:
-    reader = csv.reader(file)
-    next(reader)
-    for row in reader:
-        times.append(float(row[0]))
-if times:
-    best_time = min(times)
-    print(f"\nBest time is : {best_time: .2f} seconds")
-else:
-    print(f"\nBro here is no previous time to compare")
+    print(f"\nYour time: {total_time:.2f} seconds")
 
 """
-#这是可选的，是否打印全部的游戏时间
-print("\nAll recorded times are : " )
-for idx,time_taken in enumerate(times,start = 1):
-    print(f"{idx}. {time_taken = .2f} seconds")"""
+# This is optional, whether to print all recorded times
+print("\nAll recorded times are:")
+for idx, time_taken in enumerate(times, start=1):
+    print(f"{idx}. {time_taken:.2f} seconds")
+"""
