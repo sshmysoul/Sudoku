@@ -1,5 +1,7 @@
 import random
-
+import time
+import csv
+import os
 class Sudoku:
     def __init__(self):
         self.board = self.generate_sudoku()
@@ -77,7 +79,7 @@ class Sudoku:
         return False
 
     def remove_elements(self, board):
-        count = random.randint(20, 30)
+        count = random.randint(1,2)
         while count > 0:
             row, col = random.randint(0, 8), random.randint(0, 8)
             while board[row][col] == 0:
@@ -112,12 +114,49 @@ sudoku = Sudoku()
 print("Generated Sudoku Board:")
 sudoku.print_board()
 
+#record start  time func
+start_time =time.time()
+
 # Get user solution
 print("\nEnter your solution for the Sudoku:")
 user_solution = sudoku.get_user_solution()
+
+#record end time
+end_time = time.time()
 
 # Check user solution
 if sudoku.check_solution(user_solution):
     print("\nYour solution is correct!")
 else:
     print("\nYour solution is incorrect.")
+
+total_time = end_time - start_time
+print(f"\nTime taken to solve the Sudoku: {total_time:.2f} seconds")
+
+csv_file = "sudoku_times.csv"
+file_exists = os.path.isfile(csv_file)
+
+with open(csv_file,mode='a',newline='') as file:
+    writer = csv.writer(file)
+    if not file_exists:
+        writer.writerow(["Time taken (seconds)"])
+        writer.writerow([total_time])
+
+#compare highest point
+times = []
+with open(csv_file,mode='r') as file:
+    reader = csv.reader(file)
+    next(reader)
+    for row in reader:
+        times.append(float(row[0]))
+if times:
+    best_time = min(times)
+    print(f"\nBest time is : {best_time: .2f} seconds")
+else:
+    print(f"\nBro here is no previous time to compare")
+
+"""
+#这是可选的，是否打印全部的游戏时间
+print("\nAll recorded times are : " )
+for idx,time_taken in enumerate(times,start = 1):
+    print(f"{idx}. {time_taken = .2f} seconds")"""
