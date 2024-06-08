@@ -88,25 +88,29 @@ class Sudoku:
             count -= 1
 
     def get_user_solution(self):
+        #copy board
         user_board = [row[:] for row in self.board]
-        for i in range(9):
-            while True:
-                try:
-                    row = input(f"Enter row {i + 1} (use space to separate numbers, use 0 for empty cells): ").split()
-                    if len(row) != 9:
-                        raise ValueError("Each row must contain exactly 9 numbers.")
-                    for j in range(9):
-                        user_board[i][j] = int(row[j])
+        print("Enter ur solution by specifying the 'row col  number' (e.g '1 1 5'),start from 1")
+        while True:
+            try:
+                user_input = input("Enter row, column, number (or 'done' to finish): ").strip()
+                if user_input.lower() == 'done':
                     break
-                except ValueError as e:
-                    print(f"Invalid input: {e}. Please try again.")
+                row,col,num = map(int,user_input.split())
+                if not(1 <= row <= 9 and 1 <=col <= 9 and 1 <= num <= 9):
+                    raise ValueError("Row, column, and number must be between 1 and 9.")
+                user_board[row-1][col-1] = num
+            except ValueError as e:
+                print(f"Invalid input : {e} , please try again")
+
         return user_board
 
     def check_solution(self, user_board):
         for i in range(9):
             for j in range(9):
-                if self.board[i][j] == 0 and not self.is_valid(user_board, i, j, user_board[i][j]):
-                    return False
+                if self.board[i][j] == 0 and user_board[i][j] != 0:
+                    if not self.is_valid(user_board,i,j,user_board[i][j]):
+                        return False
         return self.solve(user_board)
 
 # Create Sudoku instance and print the generated board
@@ -140,7 +144,7 @@ with open(csv_file,mode='a',newline='') as file:
     writer = csv.writer(file)
     if not file_exists:
         writer.writerow(["Time taken (seconds)"])
-        writer.writerow([total_time])
+    writer.writerow([total_time])
 
 #compare highest point
 times = []
