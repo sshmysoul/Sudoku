@@ -131,8 +131,12 @@ class Sudoku:
                 any_input = True
             except ValueError as e:
                 print(f"Invalid input: {e}, please try again")
+        if any_input:
+            return user_board
+        else:
+            print("Please dont input done directly, if u wanna, input done to exit or type to continue")
+            return self.get_user_solution()
 
-        return user_board,any_input
 
     def check_solution(self, user_board):
         for i in range(9):
