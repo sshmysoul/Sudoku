@@ -7,8 +7,14 @@ class Sudoku:
         self.board = self.generate_sudoku()
 
     def print_board(self):
-        for row in self.board:
-            print(" ".join(str(num) if num != 0 else '.' for num in row))
+        for i, row in enumerate(self.board):
+            if i % 3 ==0 and i != 0:
+                print("-" * 21)
+            for j,num in enumerate(row):
+                if j % 3 ==0 and j != 0:
+                    print("|",end = " ")
+                print(str(num) if num != 0 else '.' ,end = ' ') 
+            print()
 
     def is_valid(self, board, row, col, num):
         for i in range(9):
